@@ -25,34 +25,48 @@ interface Props {
     products: Product[];
 }
 
-export default function Create({ customers, warehouses, products }: Props) {
+export default function Create({ customers = [], warehouses = [], products = [] }: Props) {
     const [data, setData] = useState({
-        customer_id: "",
-        warehouse_id: "",
-        transaction_date: "",
-        details: products.map((product) => ({
-            product_id: product.id,
-            qty_dus: 0,
-            qty_pcs: 0,
-        })),
+        customer_name: "",
+        warehouse_name: "",
+        transaction_date: new Date().toISOString().split("T")[0],
+        details: [
+            { product_name: "", qty_dus: 0, qty_pcs: 0 }
+        ],
     });
 
-    function submit(e: React.FormEvent) {
-        e.preventDefault();
-        router.post(store.url(), data);
+    // Tambah Baris Produk Dinamis
+    function addRow() {
+        setData({
+            ...data,
+            details: [...data.details, { product_name: "", qty_dus: 0, qty_pcs: 0 }]
+        });
     }
 
+    // Hapus Baris Produk
+    function removeRow(index: number) {
+        if (data.details.length === 1) return;
+        const details = data.details.filter((_, i) => i !== index);
+        setData({ ...data, details });
+    }
+
+    // Update Input Detail Produk
     function updateDetail(
         index: number,
-        field: "qty_dus" | "qty_pcs",
-        value: number,
+        field: "product_name" | "qty_dus" | "qty_pcs",
+        value: any
     ) {
         const details = [...data.details];
-        details[index][field] = value;
+        details[index] = { ...details[index], [field]: value };
         setData({
             ...data,
             details,
         });
+    }
+
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
+        router.post(store.url(), data);
     }
 
     return (
@@ -82,47 +96,47 @@ export default function Create({ customers, warehouses, products }: Props) {
                         {/* Customer */}
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Customer</label>
-                            <select
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                                value={data.customer_id}
+                            <Input
+                                type="text"
+                                list="customer-list"
+                                placeholder="Ketik customer baru atau pilih..."
+                                value={data.customer_name}
                                 onChange={(e) =>
                                     setData({
                                         ...data,
-                                        customer_id: e.target.value,
+                                        customer_name: e.target.value,
                                     })
                                 }
                                 required
-                            >
-                                <option value="">Pilih Customer</option>
+                            />
+                            <datalist id="customer-list">
                                 {customers.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {item.name}
-                                    </option>
+                                    <option key={item.id} value={item.name} />
                                 ))}
-                            </select>
+                            </datalist>
                         </div>
 
                         {/* Warehouse */}
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Gudang</label>
-                            <select
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                                value={data.warehouse_id}
+                            <Input
+                                type="text"
+                                list="warehouse-list"
+                                placeholder="Ketik gudang baru atau pilih..."
+                                value={data.warehouse_name}
                                 onChange={(e) =>
                                     setData({
                                         ...data,
-                                        warehouse_id: e.target.value,
+                                        warehouse_name: e.target.value,
                                     })
                                 }
                                 required
-                            >
-                                <option value="">Pilih Gudang</option>
+                            />
+                            <datalist id="warehouse-list">
                                 {warehouses.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {item.name}
-                                    </option>
+                                    <option key={item.id} value={item.name} />
                                 ))}
-                            </select>
+                            </datalist>
                         </div>
 
                         {/* Date */}
@@ -142,28 +156,57 @@ export default function Create({ customers, warehouses, products }: Props) {
                         </div>
                     </div>
 
-                    {/* Detail Barang */}
+                    {/* Datalist Master Produk */}
+                    <datalist id="product-list">
+                        {products.map((item) => (
+                            <option key={item.id} value={item.name} />
+                        ))}
+                    </datalist>
+
+                    {/* Detail Barang Dinamis */}
                     <div className="border-t pt-6 space-y-4">
-                        <h2 className="font-semibold text-lg">Detail Barang</h2>
+                        <div className="flex items-center justify-between">
+                            <h2 className="font-semibold text-lg">Detail Barang</h2>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addRow}
+                            >
+                                + Tambah Produk
+                            </Button>
+                        </div>
 
                         <div className="space-y-3">
-                            {products.map((product, index) => (
+                            {data.details.map((item, index) => (
                                 <div
-                                    key={product.id}
+                                    key={index}
                                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors"
                                 >
-                                    <div className="font-medium text-sm sm:w-1/3">
-                                        {product.name}
+                                    {/* Input Fleksibel Produk */}
+                                    <div className="space-y-1 sm:w-1/2">
+                                        <span className="text-xs text-muted-foreground">Nama Produk</span>
+                                        <Input
+                                            type="text"
+                                            list="product-list"
+                                            placeholder="Ketik produk baru atau pilih..."
+                                            value={item.product_name}
+                                            onChange={(e) =>
+                                                updateDetail(index, "product_name", e.target.value)
+                                            }
+                                            required
+                                        />
                                     </div>
 
-                                    <div className="flex items-center gap-4 sm:w-2/3">
+                                    {/* Qty & Action */}
+                                    <div className="flex items-center gap-3 sm:w-1/2">
                                         <div className="flex-1 space-y-1">
                                             <span className="text-xs text-muted-foreground">Qty Dus</span>
                                             <Input
                                                 type="number"
                                                 min="0"
                                                 placeholder="0"
-                                                value={data.details[index].qty_dus}
+                                                value={item.qty_dus}
                                                 onChange={(e) =>
                                                     updateDetail(
                                                         index,
@@ -180,7 +223,7 @@ export default function Create({ customers, warehouses, products }: Props) {
                                                 type="number"
                                                 min="0"
                                                 placeholder="0"
-                                                value={data.details[index].qty_pcs}
+                                                value={item.qty_pcs}
                                                 onChange={(e) =>
                                                     updateDetail(
                                                         index,
@@ -190,6 +233,21 @@ export default function Create({ customers, warehouses, products }: Props) {
                                                 }
                                             />
                                         </div>
+
+                                        {/* Hapus Baris */}
+                                        {data.details.length > 1 && (
+                                            <div className="space-y-1">
+                                                <span className="text-xs opacity-0 block">Aksi</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => removeRow(index)}
+                                                >
+                                                    Hapus
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

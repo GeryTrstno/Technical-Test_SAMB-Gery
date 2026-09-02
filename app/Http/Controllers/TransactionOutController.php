@@ -31,31 +31,39 @@ class TransactionOutController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'customer_id' => 'required',
-            'warehouse_id' => 'required',
+            'customer_name' => 'required|string',
+            'warehouse_name' => 'required|string',
             'transaction_date' => 'required|date',
             'details' => 'required|array',
-            'details.*.product_id' => 'required',
-            'details.*.qty_dus' => 'integer',
-            'details.*.qty_pcs' => 'integer',
+            'details.*.product_name' => 'required|string',
+            'details.*.qty_dus' => 'nullable|integer',
+            'details.*.qty_pcs' => 'nullable|integer',
         ]);
 
-        DB::transaction(function() use ($validated) {
+        DB::transaction(function () use ($validated) {
+            $customer = Customer::firstOrCreate(['name' => trim($validated['customer_name'])]);
+            $warehouse = Warehouse::firstOrCreate(['name' => trim($validated['warehouse_name'])]);
+
             $header = TransactionOutHeader::create([
                 'transaction_number' => 'OUT-' . date('YmdHis'),
-                'customer_id' => $validated['customer_id'],
-                'warehouse_id' => $validated['warehouse_id'],
+                'customer_id' => $customer->id,
+                'warehouse_id' => $warehouse->id,
                 'transaction_date' => $validated['transaction_date'],
-                'notes' => null
+                'notes' => null,
             ]);
 
             foreach ($validated['details'] as $detail) {
-                if (($detail['qty_dus'] ?? 0) > 0 || ($detail['qty_pcs'] ?? 0) > 0) {
+                $qtyDus = $detail['qty_dus'] ?? 0;
+                $qtyPcs = $detail['qty_pcs'] ?? 0;
+
+                if ($qtyDus > 0 || $qtyPcs > 0) {
+                    $product = Product::firstOrCreate(['name' => trim($detail['product_name'])]);
+
                     TransactionOutDetail::create([
                         'transaction_out_header_id' => $header->id,
-                        'product_id' => $detail['product_id'],
-                        'qty_dus' => $detail['qty_dus'] ?? 0,
-                        'qty_pcs' => $detail['qty_pcs'] ?? 0,
+                        'product_id' => $product->id,
+                        'qty_dus' => $qtyDus,
+                        'qty_pcs' => $qtyPcs,
                     ]);
                 }
             }
@@ -78,31 +86,40 @@ class TransactionOutController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'customer_id' => 'required',
-            'warehouse_id' => 'required',
+            'customer_name' => 'required|string',
+            'warehouse_name' => 'required|string',
             'transaction_date' => 'required|date',
             'details' => 'required|array',
-            'details.*.product_id' => 'required',
+            'details.*.product_name' => 'required|string',
             'details.*.qty_dus' => 'nullable|integer',
             'details.*.qty_pcs' => 'nullable|integer',
         ]);
 
         DB::transaction(function () use ($id, $validated) {
+            $customer = Customer::firstOrCreate(['name' => trim($validated['customer_name'])]);
+            $warehouse = Warehouse::firstOrCreate(['name' => trim($validated['warehouse_name'])]);
+
             $header = TransactionOutHeader::findOrFail($id);
             $header->update([
-                'customer_id' => $validated['customer_id'],
-                'warehouse_id' => $validated['warehouse_id'],
+                'customer_id' => $customer->id,
+                'warehouse_id' => $warehouse->id,
                 'transaction_date' => $validated['transaction_date'],
             ]);
 
             TransactionOutDetail::where('transaction_out_header_id', $id)->delete();
+
             foreach ($validated['details'] as $detail) {
-                if (($detail['qty_dus'] ?? 0) > 0 || ($detail['qty_pcs'] ?? 0) > 0) {
+                $qtyDus = $detail['qty_dus'] ?? 0;
+                $qtyPcs = $detail['qty_pcs'] ?? 0;
+
+                if ($qtyDus > 0 || $qtyPcs > 0) {
+                    $product = Product::firstOrCreate(['name' => trim($detail['product_name'])]);
+
                     TransactionOutDetail::create([
                         'transaction_out_header_id' => $id,
-                        'product_id' => $detail['product_id'],
-                        'qty_dus' => $detail['qty_dus'] ?? 0,
-                        'qty_pcs' => $detail['qty_pcs'] ?? 0,
+                        'product_id' => $product->id,
+                        'qty_dus' => $qtyDus,
+                        'qty_pcs' => $qtyPcs,
                     ]);
                 }
             }

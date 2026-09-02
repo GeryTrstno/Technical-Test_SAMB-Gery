@@ -49,38 +49,46 @@ class TransactionInController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'supplier_id'=>'required',
-            'warehouse_id'=>'required',
-            'transaction_date'=>'required|date',
-            'details'=>'required|array',
-            'details.*.product_id'=>'required',
-            'details.*.qty_dus'=>'integer',
-            'details.*.qty_pcs'=>'integer',
+            'supplier_name' => 'required|string',
+            'warehouse_name' => 'required|string',
+            'transaction_date' => 'required|date',
+            'details' => 'required|array',
+            'details.*.product_name' => 'required|string',
+            'details.*.qty_dus' => 'nullable|integer',
+            'details.*.qty_pcs' => 'nullable|integer',
         ]);
 
-        DB::transaction(function() use($validated) {
+        DB::transaction(function () use ($validated) {
+            // Otomatis cari atau buat master baru
+            $supplier = Supplier::firstOrCreate(['name' => trim($validated['supplier_name'])]);
+            $warehouse = Warehouse::firstOrCreate(['name' => trim($validated['warehouse_name'])]);
+
             $header = TransactionInHeader::create([
-                'transaction_number'=>'IN-'.date('YmdHis'),
-                'supplier_id'=>$validated['supplier_id'],
-                'warehouse_id'=>$validated['warehouse_id'],
-                'transaction_date'=>$validated['transaction_date'],
-                'notes'=>null
+                'transaction_number' => 'IN-' . date('YmdHis'),
+                'supplier_id' => $supplier->id,
+                'warehouse_id' => $warehouse->id,
+                'transaction_date' => $validated['transaction_date'],
+                'notes' => null,
             ]);
 
-            foreach($validated['details'] as $detail){
-                TransactionInDetail::create([
-                    'transaction_in_header_id'=>$header->id,
-                    'product_id'=>$detail['product_id'],
-                    'qty_dus'=>$detail['qty_dus'] ?? 0,
-                    'qty_pcs'=>$detail['qty_pcs'] ?? 0,
-                ]);
+            foreach ($validated['details'] as $detail) {
+                $qtyDus = $detail['qty_dus'] ?? 0;
+                $qtyPcs = $detail['qty_pcs'] ?? 0;
+
+                if ($qtyDus > 0 || $qtyPcs > 0) {
+                    $product = Product::firstOrCreate(['name' => trim($detail['product_name'])]);
+
+                    TransactionInDetail::create([
+                        'transaction_in_header_id' => $header->id,
+                        'product_id' => $product->id,
+                        'qty_dus' => $qtyDus,
+                        'qty_pcs' => $qtyPcs,
+                    ]);
+                }
             }
         });
 
-        return redirect()
-            ->route('transaction-in.index')
-            ->with('success','Barang masuk berhasil disimpan');
-
+        return redirect()->route('transaction-in.index');
     }
 
     public function edit($id)
@@ -97,31 +105,40 @@ class TransactionInController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'supplier_id' => 'required',
-            'warehouse_id' => 'required',
+            'supplier_name' => 'required|string',
+            'warehouse_name' => 'required|string',
             'transaction_date' => 'required|date',
             'details' => 'required|array',
-            'details.*.product_id' => 'required',
+            'details.*.product_name' => 'required|string',
             'details.*.qty_dus' => 'nullable|integer',
             'details.*.qty_pcs' => 'nullable|integer',
         ]);
 
         DB::transaction(function () use ($id, $validated) {
+            $supplier = Supplier::firstOrCreate(['name' => trim($validated['supplier_name'])]);
+            $warehouse = Warehouse::firstOrCreate(['name' => trim($validated['warehouse_name'])]);
+
             $header = TransactionInHeader::findOrFail($id);
             $header->update([
-                'supplier_id' => $validated['supplier_id'],
-                'warehouse_id' => $validated['warehouse_id'],
+                'supplier_id' => $supplier->id,
+                'warehouse_id' => $warehouse->id,
                 'transaction_date' => $validated['transaction_date'],
             ]);
 
             TransactionInDetail::where('transaction_in_header_id', $id)->delete();
+
             foreach ($validated['details'] as $detail) {
-                if (($detail['qty_dus'] ?? 0) > 0 || ($detail['qty_pcs'] ?? 0) > 0) {
+                $qtyDus = $detail['qty_dus'] ?? 0;
+                $qtyPcs = $detail['qty_pcs'] ?? 0;
+
+                if ($qtyDus > 0 || $qtyPcs > 0) {
+                    $product = Product::firstOrCreate(['name' => trim($detail['product_name'])]);
+
                     TransactionInDetail::create([
                         'transaction_in_header_id' => $id,
-                        'product_id' => $detail['product_id'],
-                        'qty_dus' => $detail['qty_dus'] ?? 0,
-                        'qty_pcs' => $detail['qty_pcs'] ?? 0,
+                        'product_id' => $product->id,
+                        'qty_dus' => $qtyDus,
+                        'qty_pcs' => $qtyPcs,
                     ]);
                 }
             }

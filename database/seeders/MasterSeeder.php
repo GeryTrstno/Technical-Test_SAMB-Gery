@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Product;
 use App\Models\Supplier;
@@ -16,32 +15,60 @@ class MasterSeeder extends Seeder
      */
     public function run(): void
     {
-        Supplier::create([
-            'name'=>'PT Supplier ABC'
-        ]);
+        // 1. Data Dummy Supplier (Supplier A - E)
+        $suppliers = [
+            ['name' => 'Supplier A'],
+            ['name' => 'Supplier B'],
+            ['name' => 'Supplier C'],
+            ['name' => 'Supplier D'],
+            ['name' => 'Supplier E'],
+        ];
 
-        Customer::create([
-            'name'=>'PT Customer XYZ'
-        ]);
+        foreach ($suppliers as $supplier) {
+            Supplier::firstOrCreate($supplier);
+        }
 
-        Warehouse::create([
-            'name'=>'Gudang A'
-        ]);
+        // 2. Data Dummy Customer (Customer A - E)
+        $customers = [
+            ['name' => 'Customer A'],
+            ['name' => 'Customer B'],
+            ['name' => 'Customer C'],
+            ['name' => 'Customer D'],
+            ['name' => 'Customer E'],
+        ];
 
-        Product::insert([
-            [
-                'name'=>'Barang A'
-            ],
+        foreach ($customers as $customer) {
+            Customer::firstOrCreate($customer);
+        }
 
-            [
-                'name'=>'Barang B'
-            ],
+        // 3. Data Dummy Warehouse (Gudang A - D)
+        $warehouses = [
+            ['name' => 'Gudang A'],
+            ['name' => 'Gudang B'],
+            ['name' => 'Gudang C'],
+            ['name' => 'Gudang D'],
+        ];
 
-            [
-                'name'=>'Barang C'
-            ]
+        foreach ($warehouses as $warehouse) {
+            Warehouse::firstOrCreate($warehouse);
+        }
 
-        ]);
+        // 4. Data Dummy Product (Barang A - J)
+        $products = [
+            ['name' => 'Barang A'],
+            ['name' => 'Barang B'],
+            ['name' => 'Barang C'],
+            ['name' => 'Barang D'],
+            ['name' => 'Barang E'],
+            ['name' => 'Barang F'],
+            ['name' => 'Barang G'],
+            ['name' => 'Barang H'],
+            ['name' => 'Barang I'],
+            ['name' => 'Barang J'],
+        ];
 
+        foreach ($products as $product) {
+            Product::firstOrCreate($product);
+        }
     }
 }
