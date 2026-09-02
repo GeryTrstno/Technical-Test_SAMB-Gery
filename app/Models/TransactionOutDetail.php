@@ -18,7 +18,7 @@ class TransactionOutDetail extends Model
 
     public function header()
     {
-        return $this->belongsTo(TransactionOutHeader::class);
+        return $this->belongsTo(TransactionOutHeader::class, 'transaction_out_header_id');
     }
 
     public function product()

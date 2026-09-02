@@ -15,7 +15,7 @@ class TransactionInDetail extends Model
 
     public function header()
     {
-        return $this->belongsTo(TransactionInHeader::class);
+        return $this->belongsTo(TransactionInHeader::class, 'transaction_in_header_id');    
     }
 
     public function product()

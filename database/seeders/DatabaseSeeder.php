@@ -20,33 +20,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Supplier::create([
-            'name'=>'Supplier ABC'
-        ]);
-
-
-        Customer::create([
-            'name'=>'Customer XYZ'
-        ]);
-
-
-
-        Warehouse::create([
-            'name'=>'Gudang A'
-        ]);
-
-        Product::insert([
-
-        [
-            'name'=>'Barang A'
-        ],
-        [
-            'name'=>'Barang B'
-        ],
-        [
-            'name'=>'Barang C'
-        ]
-
+        $this->call([
+            MasterSeeder::class
         ]);
     }
 }
