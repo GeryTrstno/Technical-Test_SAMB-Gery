@@ -5,7 +5,7 @@ interface Transaction {
     id: number;
     transaction_number: string;
     transaction_date: string;
-    supplier: {
+    customer: {
         name: string;
     };
     warehouse: {
@@ -35,7 +35,7 @@ export default function Index({ transactions }: Props) {
                     <thead>
                         <tr className="border">
                             <th>No</th>
-                            <th>Supplier</th>
+                            <th>Customer</th>
                             <th>Gudang</th>
                             <th>Tanggal</th>
                         </tr>
@@ -46,7 +46,7 @@ export default function Index({ transactions }: Props) {
                             <tr key={item.id} className="border">
                                 <td>{index + 1}</td>
 
-                                <td>{item.supplier.name}</td>
+                                <td>{item.customer.name}</td>
 
                                 <td>{item.warehouse.name}</td>
 

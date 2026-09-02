@@ -2,7 +2,7 @@ import { Head, router } from "@inertiajs/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { store } from "@/routes/transaction-in";
+import { store } from "@/routes/transaction-out";
 
 interface Customer {
     id: number;
@@ -66,15 +66,15 @@ export default function Create({ customers, warehouses, products }: Props) {
 
     return (
         <>
-            <Head title="Penerimaan Barang" />
+            <Head title="Pengeluaran Barang" />
 
             <form onSubmit={submit} className="p-6 space-y-6">
                 <h1 className="text-2xl font-bold">Pengeluaran Barang</h1>
 
-                {/* Supplier */}
+                {/* Customer */}
 
                 <div className="space-y-2">
-                    <label>Supplier</label>
+                    <label>Customer</label>
 
                     <select
                         className="border rounded-md p-2 w-full"
