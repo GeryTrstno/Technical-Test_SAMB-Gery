@@ -18,6 +18,11 @@ import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
+        title: 'Dashboard',
+        href: dashboard(),
+        icon: LayoutGrid,
+    },
+    {
         title: 'Barang Masuk',
         href: '/transaction-in',
         icon: ArrowDownLeft,
@@ -32,6 +37,7 @@ const mainNavItems: NavItem[] = [
         href: '/stock-report',
         icon: Boxes,
     },
+
 ];
 
 const footerNavItems: NavItem[] = [

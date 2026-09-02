@@ -82,4 +82,61 @@ class TransactionInController extends Controller
             ->with('success','Barang masuk berhasil disimpan');
 
     }
+
+    public function edit($id)
+    {
+        $transaction = TransactionInHeader::with('details')->findOrFail($id);
+        return Inertia::render('TransactionIn/Edit', [
+            'transaction' => $transaction,
+            'suppliers' => Supplier::all(),
+            'warehouses' => Warehouse::all(),
+            'products' => Product::all(),
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'supplier_id' => 'required',
+            'warehouse_id' => 'required',
+            'transaction_date' => 'required|date',
+            'details' => 'required|array',
+            'details.*.product_id' => 'required',
+            'details.*.qty_dus' => 'nullable|integer',
+            'details.*.qty_pcs' => 'nullable|integer',
+        ]);
+
+        DB::transaction(function () use ($id, $validated) {
+            $header = TransactionInHeader::findOrFail($id);
+            $header->update([
+                'supplier_id' => $validated['supplier_id'],
+                'warehouse_id' => $validated['warehouse_id'],
+                'transaction_date' => $validated['transaction_date'],
+            ]);
+
+            TransactionInDetail::where('transaction_in_header_id', $id)->delete();
+            foreach ($validated['details'] as $detail) {
+                if (($detail['qty_dus'] ?? 0) > 0 || ($detail['qty_pcs'] ?? 0) > 0) {
+                    TransactionInDetail::create([
+                        'transaction_in_header_id' => $id,
+                        'product_id' => $detail['product_id'],
+                        'qty_dus' => $detail['qty_dus'] ?? 0,
+                        'qty_pcs' => $detail['qty_pcs'] ?? 0,
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->route('transaction-in.index');
+    }
+
+    public function destroy($id)
+    {
+        DB::transaction(function () use ($id) {
+            TransactionInDetail::where('transaction_in_header_id', $id)->delete();
+            TransactionInHeader::findOrFail($id)->delete();
+        });
+
+        return redirect()->route('transaction-in.index');
+    }
 }

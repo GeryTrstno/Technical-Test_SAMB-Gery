@@ -12,7 +12,7 @@ export default function Dashboard() {
                 {/* Header Welcome */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-card p-6 rounded-xl border shadow-sm">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Selamat Datang Kembali! 👋</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">Welcome!</h1>
                         <p className="text-sm text-muted-foreground">
                             Ringkasan akses cepat operasional dan pencatatan inventaris.
                         </p>
