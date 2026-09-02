@@ -29,7 +29,6 @@ class MasterSeeder extends Seeder
         ]);
 
         Product::insert([
-
             [
                 'name'=>'Barang A'
             ],
